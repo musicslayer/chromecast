@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en-US">    
+    <head>
+        <title>Server Game</title>
+    </head>
+
+    <body>
+		<button id="ID_Cast">Cast</button>
+		<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+		<script>
+			const CastButton = document.querySelector("#ID_Cast");
+			
+			CastButton.addEventListener("click", async () => {
+                output = "";
+				let sessionRequest;
+
+				initializeCastApi = async function() {
+					return new Promise((resolve) => {
+						output += 'initializing cast api\n'
+						sessionRequest = new chrome.cast.SessionRequest(
+							chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+							[],
+							10000,
+							true,
+							null
+						);
+
+						let apiConfig = new chrome.cast.ApiConfig(sessionRequest,
+							function(session) {
+								output += 'got session ' + session + '\n'
+							},
+							function receiverListener(e) {
+								if(e === chrome.cast.ReceiverAvailability.AVAILABLE) {
+									output += 'receiver is available :)\n'
+								}
+								else {
+									output += 'receiver is NOT available :(\n'
+								}
+								resolve();
+							},
+							chrome.cast.AutoJoinPolicy.PAGE_SCOPED,
+							chrome.cast.DefaultActionPolicy.CAST_THIS_TAB
+						)
+
+						chrome.cast.initialize(apiConfig,
+							function() {
+								output += 'got initSuccess\n';
+							},
+							function(gotError) {
+								output += 'gotError ' + gotError + '\n'
+							}
+						);
+					})
+				};
+					
+				await initializeCastApi();
+				chrome.cast.requestSession((e) => {}, (e) => {}, sessionRequest);
+            });
+		</script>
+	</body>
+</html>
